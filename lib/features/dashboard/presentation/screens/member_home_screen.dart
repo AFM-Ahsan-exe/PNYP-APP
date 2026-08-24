@@ -39,7 +39,11 @@ class MemberHomeScreen extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.wifi_off_rounded, size: 64, color: Colors.grey),
+                const Icon(
+                  Icons.wifi_off_rounded,
+                  size: 64,
+                  color: Colors.grey,
+                ),
                 const SizedBox(height: 24),
                 Text(
                   'Could not load your profile',
@@ -90,8 +94,8 @@ class _WelcomeBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final expiry = user.membershipExpiryDate?.toDate();
-    final isExpired = expiry != null && expiry.isBefore(now);
-    final daysUntilExpiry = expiry != null ? expiry.difference(now).inDays : null;
+    final isExpired = expiry?.isBefore(now) ?? false;
+    final daysUntilExpiry = expiry?.difference(now).inDays;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -144,27 +148,41 @@ class _WelcomeBanner extends StatelessWidget {
                 if (isExpired)
                   Container(
                     margin: const EdgeInsets.only(top: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.red.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Text(
                       'Membership expired',
-                      style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   )
                 else if (daysUntilExpiry != null && daysUntilExpiry <= 30)
                   Container(
                     margin: const EdgeInsets.only(top: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.orange.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       'Expires in $daysUntilExpiry days',
-                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
               ],
@@ -223,9 +241,15 @@ class _MembershipCard extends StatelessWidget {
             const SizedBox(height: 16),
             _DetailRow(label: 'Status', value: _statusLabel(user.status)),
             const SizedBox(height: 8),
-            _DetailRow(label: 'Type', value: _membershipTypeLabel(user.membershipType)),
+            _DetailRow(
+              label: 'Type',
+              value: _membershipTypeLabel(user.membershipType),
+            ),
             const SizedBox(height: 8),
-            _DetailRow(label: 'Member ID', value: user.membershipId ?? 'Not assigned'),
+            _DetailRow(
+              label: 'Member ID',
+              value: user.membershipId ?? 'Not assigned',
+            ),
             const SizedBox(height: 8),
             if (user.membershipStartDate != null)
               _DetailRow(
@@ -309,18 +333,18 @@ class _DetailRow extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
         Expanded(
           child: Text(
             value,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: valueColor,
-                ),
+              fontWeight: FontWeight.w600,
+              color: valueColor,
+            ),
           ),
         ),
       ],
@@ -361,10 +385,7 @@ class _QuickActions extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Quick Actions',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        Text('Quick Actions', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         GridView.count(
           shrinkWrap: true,
@@ -385,7 +406,11 @@ class _ActionItem extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _ActionItem({required this.icon, required this.label, required this.onTap});
+  const _ActionItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -399,12 +424,13 @@ class _ActionItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 28, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(height: 12),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.titleSmall,
+              Icon(
+                icon,
+                size: 28,
+                color: Theme.of(context).colorScheme.primary,
               ),
+              const SizedBox(height: 12),
+              Text(label, style: Theme.of(context).textTheme.titleSmall),
             ],
           ),
         ),
@@ -419,10 +445,7 @@ class _RecentActivity extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Recent Activity',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        Text('Recent Activity', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         Card(
           child: Padding(

@@ -4,21 +4,22 @@ sealed class Failure {
 }
 
 class ServerFailure extends Failure {
-  const ServerFailure(String message) : super(message);
+  const ServerFailure(super.message);
 }
 
 class NetworkFailure extends Failure {
-  const NetworkFailure() : super('Network error. Check your internet connection.');
+  const NetworkFailure()
+    : super('Network error. Check your internet connection.');
 }
 
 class ValidationFailure extends Failure {
-  const ValidationFailure(String message) : super(message);
+  const ValidationFailure(super.message);
 }
 
 class AuthFailure extends Failure {
-  const AuthFailure(String message) : super(message);
+  const AuthFailure(super.message);
 }
 
 class StorageFailure extends Failure {
-  const StorageFailure(String message) : super(message);
+  const StorageFailure(super.message);
 }

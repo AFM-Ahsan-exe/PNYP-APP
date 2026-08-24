@@ -14,7 +14,8 @@ class RenewMembershipScreen extends ConsumerStatefulWidget {
   const RenewMembershipScreen({super.key});
 
   @override
-  ConsumerState<RenewMembershipScreen> createState() => _RenewMembershipScreenState();
+  ConsumerState<RenewMembershipScreen> createState() =>
+      _RenewMembershipScreenState();
 }
 
 class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
@@ -37,9 +38,7 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
     final userAsync = ref.watch(memberUserProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Renew Membership'),
-      ),
+      appBar: AppBar(title: const Text('Renew Membership')),
       body: userAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -48,7 +47,11 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.wifi_off_rounded, size: 64, color: Colors.grey),
+                const Icon(
+                  Icons.wifi_off_rounded,
+                  size: 64,
+                  color: Colors.grey,
+                ),
                 const SizedBox(height: 24),
                 Text(
                   'Could not load your profile',
@@ -82,13 +85,24 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
                       decoration: BoxDecoration(
                         color: Colors.red.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: Colors.red.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 20,
+                          ),
                           const SizedBox(width: 10),
-                          Expanded(child: Text(_errorMessage!, style: const TextStyle(color: Colors.red))),
+                          Expanded(
+                            child: Text(
+                              _errorMessage!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -98,13 +112,24 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
                       decoration: BoxDecoration(
                         color: Colors.green.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: Colors.green.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+                          const Icon(
+                            Icons.check_circle_outline,
+                            color: Colors.green,
+                            size: 20,
+                          ),
                           const SizedBox(width: 10),
-                          Expanded(child: Text(_successMessage!, style: const TextStyle(color: Colors.green))),
+                          Expanded(
+                            child: Text(
+                              _successMessage!,
+                              style: const TextStyle(color: Colors.green),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -120,9 +145,20 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 12),
-                          _DetailRow(label: 'Member ID', value: user.membershipId ?? 'Not assigned'),
-                          _DetailRow(label: 'Type', value: _membershipTypeLabel(user.membershipType)),
-                          _DetailRow(label: 'Expires', value: _formatDate(user.membershipExpiryDate?.toDate())),
+                          _DetailRow(
+                            label: 'Member ID',
+                            value: user.membershipId ?? 'Not assigned',
+                          ),
+                          _DetailRow(
+                            label: 'Type',
+                            value: _membershipTypeLabel(user.membershipType),
+                          ),
+                          _DetailRow(
+                            label: 'Expires',
+                            value: _formatDate(
+                              user.membershipExpiryDate?.toDate(),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -134,19 +170,35 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: _selectedMembershipType ?? user.membershipType,
+                    initialValue:
+                        _selectedMembershipType ?? user.membershipType,
                     decoration: const InputDecoration(
                       labelText: 'Membership Type',
                       prefixIcon: Icon(Icons.card_membership_outlined),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'youth_mpa', child: Text('Youth MPA')),
-                      DropdownMenuItem(value: 'youth_mna', child: Text('Youth MNA')),
-                      DropdownMenuItem(value: 'youth_senator', child: Text('Youth Senator')),
-                      DropdownMenuItem(value: 'youth_judge', child: Text('Youth Judge')),
+                      DropdownMenuItem(
+                        value: 'youth_mpa',
+                        child: Text('Youth MPA'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'youth_mna',
+                        child: Text('Youth MNA'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'youth_senator',
+                        child: Text('Youth Senator'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'youth_judge',
+                        child: Text('Youth Judge'),
+                      ),
                     ],
-                    onChanged: (value) => setState(() => _selectedMembershipType = value),
-                    validator: (value) => value == null ? 'Please select a membership type' : null,
+                    onChanged: (value) =>
+                        setState(() => _selectedMembershipType = value),
+                    validator: (value) => value == null
+                        ? 'Please select a membership type'
+                        : null,
                   ),
                   const SizedBox(height: 20),
                   Text(
@@ -154,7 +206,12 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 12),
-                  _uploadTile('Payment proof (JPG/PNG/PDF)', 'paymentProof', ['png', 'jpg', 'jpeg', 'pdf']),
+                  _uploadTile('Payment proof (JPG/PNG/PDF)', 'paymentProof', [
+                    'png',
+                    'jpg',
+                    'jpeg',
+                    'pdf',
+                  ]),
                   const SizedBox(height: 24),
                   FilledButton(
                     onPressed: _isLoading ? null : _submitRenewal,
@@ -162,10 +219,19 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
                       backgroundColor: AppColors.navyDarkest,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: _isLoading
-                        ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white))
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.4,
+                              color: Colors.white,
+                            ),
+                          )
                         : const Text('Submit Renewal'),
                   ),
                 ],
@@ -181,7 +247,9 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
     final hasFile = _documentBytes.containsKey(key);
     return OutlinedButton.icon(
       onPressed: () => _pickFile(key, title, allowedExtensions),
-      icon: Icon(hasFile ? Icons.check_circle_outline : Icons.upload_file_outlined),
+      icon: Icon(
+        hasFile ? Icons.check_circle_outline : Icons.upload_file_outlined,
+      ),
       label: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
@@ -190,12 +258,22 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  Text(hasFile ? 'File selected' : 'Tap to upload', style: const TextStyle(fontSize: 12)),
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    hasFile ? 'File selected' : 'Tap to upload',
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ],
               ),
             ),
-            Icon(hasFile ? Icons.remove_circle_outline : Icons.attach_file_outlined),
+            Icon(
+              hasFile
+                  ? Icons.remove_circle_outline
+                  : Icons.attach_file_outlined,
+            ),
           ],
         ),
       ),
@@ -208,10 +286,16 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
     );
   }
 
-  Future<void> _pickFile(String key, String title, List<String> allowedExtensions) async {
+  Future<void> _pickFile(
+    String key,
+    String title,
+    List<String> allowedExtensions,
+  ) async {
     try {
       final result = await FilePicker.platform.pickFiles(
-        type: allowedExtensions.contains('pdf') ? FileType.custom : FileType.image,
+        type: allowedExtensions.contains('pdf')
+            ? FileType.custom
+            : FileType.image,
         allowedExtensions: allowedExtensions,
         withData: true,
       );
@@ -222,7 +306,9 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to pick $title: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to pick $title: $e')));
       }
     }
   }
@@ -246,7 +332,13 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
 
       final uploadPromises = <Future<String?>>[];
       if (_documentBytes['paymentProof'] != null) {
-        uploadPromises.add(_uploadFile('renewals/${user.uid}_${DateTime.now().millisecondsSinceEpoch}_payment.jpg', _documentBytes['paymentProof']!, 'image/jpeg'));
+        uploadPromises.add(
+          _uploadFile(
+            'renewals/${user.uid}_${DateTime.now().millisecondsSinceEpoch}_payment.jpg',
+            _documentBytes['paymentProof']!,
+            'image/jpeg',
+          ),
+        );
       }
 
       final urls = await Future.wait(uploadPromises);
@@ -255,14 +347,17 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
       final now = DateTime.now();
       final expiryDate = DateTime(now.year + 1, now.month, now.day);
 
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'membershipType': _selectedMembershipType,
-        'membershipStartDate': FieldValue.serverTimestamp(),
-        'membershipExpiryDate': Timestamp.fromDate(expiryDate),
-        'status': 'pending',
-        'paymentProofUrl': paymentProofUrl,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+            'membershipType': _selectedMembershipType,
+            'membershipStartDate': FieldValue.serverTimestamp(),
+            'membershipExpiryDate': Timestamp.fromDate(expiryDate),
+            'status': 'pending',
+            'paymentProofUrl': paymentProofUrl,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
 
       await FirebaseFirestore.instance.collection('payments').add({
         'userId': user.uid,
@@ -289,7 +384,11 @@ class _RenewMembershipScreenState extends ConsumerState<RenewMembershipScreen> {
     }
   }
 
-  Future<String?> _uploadFile(String path, List<int> bytes, String contentType) async {
+  Future<String?> _uploadFile(
+    String path,
+    List<int> bytes,
+    String contentType,
+  ) async {
     final ref = FirebaseStorage.instance.ref().child(path);
     final metadata = SettableMetadata(contentType: contentType);
     final uploadTask = ref.putData(Uint8List.fromList(bytes), metadata);
@@ -336,16 +435,16 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
         ],

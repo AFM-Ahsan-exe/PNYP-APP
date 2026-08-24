@@ -6,10 +6,12 @@ class NotificationPreferencesScreen extends StatefulWidget {
   const NotificationPreferencesScreen({super.key});
 
   @override
-  State<NotificationPreferencesScreen> createState() => _NotificationPreferencesScreenState();
+  State<NotificationPreferencesScreen> createState() =>
+      _NotificationPreferencesScreenState();
 }
 
-class _NotificationPreferencesScreenState extends State<NotificationPreferencesScreen> {
+class _NotificationPreferencesScreenState
+    extends State<NotificationPreferencesScreen> {
   Map<String, bool> _preferences = {
     'events': true,
     'news': true,
@@ -22,9 +24,7 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notification Preferences'),
-      ),
+      appBar: AppBar(title: const Text('Notification Preferences')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -33,20 +33,22 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 24),
-          ..._preferences.entries.map((entry) => Card(
-                child: SwitchListTile(
-                  secondary: Icon(_getIconForCategory(entry.key)),
-                  title: Text(_getTitleForCategory(entry.key)),
-                  subtitle: Text(_getDescriptionForCategory(entry.key)),
-                  value: entry.value,
-                  onChanged: (value) {
-                    setState(() {
-                      _preferences[entry.key] = value;
-                    });
-                    _savePreference(context, entry.key, value);
-                  },
-                ),
-              )),
+          ..._preferences.entries.map(
+            (entry) => Card(
+              child: SwitchListTile(
+                secondary: Icon(_getIconForCategory(entry.key)),
+                title: Text(_getTitleForCategory(entry.key)),
+                subtitle: Text(_getDescriptionForCategory(entry.key)),
+                value: entry.value,
+                onChanged: (value) {
+                  setState(() {
+                    _preferences[entry.key] = value;
+                  });
+                  _savePreference(context, entry.key, value);
+                },
+              ),
+            ),
+          ),
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: _resetToDefaults,
@@ -55,7 +57,9 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF1A3A5C),
               padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ],
@@ -120,7 +124,11 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
     }
   }
 
-  Future<void> _savePreference(BuildContext context, String category, bool value) async {
+  Future<void> _savePreference(
+    BuildContext context,
+    String category,
+    bool value,
+  ) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
@@ -130,14 +138,22 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      if (mounted) {
+      if (!context.mounted) return;
+      {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${_getTitleForCategory(category)} notifications ${value ? 'enabled' : 'disabled'}')),
+          SnackBar(
+            content: Text(
+              '${_getTitleForCategory(category)} notifications ${value ? 'enabled' : 'disabled'}',
+            ),
+          ),
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving preferences: $e')));
+      if (!context.mounted) return;
+      {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving preferences: $e')));
       }
     }
   }

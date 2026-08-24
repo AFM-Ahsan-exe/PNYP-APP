@@ -63,15 +63,19 @@ class _MemberTileState extends ConsumerState<_MemberTile> {
       await ref
           .read(adminMemberRepositoryProvider)
           .updateStatus(widget.member.uid, status, reason: reason);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Member ${status == "approved" ? "approved" : "rejected"} successfully')),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Member ${status == "approved" ? "approved" : "rejected"} successfully',
+          ),
+        ),
+      );
     } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$error')));
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('$error')));
     }
   }
 
@@ -87,19 +91,29 @@ class _MemberTileState extends ConsumerState<_MemberTile> {
             isExpanded: _isExpanded,
             headerBuilder: (context, isExpanded) {
               return ListTile(
-                title: Text(widget.member.name.isEmpty ? 'Unnamed member' : widget.member.name),
+                title: Text(
+                  widget.member.name.isEmpty
+                      ? 'Unnamed member'
+                      : widget.member.name,
+                ),
                 subtitle: Text(widget.member.email),
                 trailing: Wrap(
                   spacing: 4,
                   children: [
                     IconButton(
                       tooltip: 'Approve member',
-                      icon: const Icon(Icons.check_circle_outline, color: Colors.green),
+                      icon: const Icon(
+                        Icons.check_circle_outline,
+                        color: Colors.green,
+                      ),
                       onPressed: () => _showApproveDialog(context),
                     ),
                     IconButton(
                       tooltip: 'Reject member',
-                      icon: const Icon(Icons.cancel_outlined, color: Colors.red),
+                      icon: const Icon(
+                        Icons.cancel_outlined,
+                        color: Colors.red,
+                      ),
                       onPressed: () => _showRejectDialog(context),
                     ),
                   ],
@@ -118,7 +132,9 @@ class _MemberTileState extends ConsumerState<_MemberTile> {
                           onPressed: () => _showApproveDialog(context),
                           icon: const Icon(Icons.check_circle_outline),
                           label: const Text('Approve'),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -127,7 +143,9 @@ class _MemberTileState extends ConsumerState<_MemberTile> {
                           onPressed: () => _showRejectDialog(context),
                           icon: const Icon(Icons.cancel_outlined),
                           label: const Text('Reject'),
-                          style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.red,
+                          ),
                         ),
                       ),
                     ],
@@ -153,20 +171,30 @@ class _MemberTileState extends ConsumerState<_MemberTile> {
             Text('Approve ${widget.member.name}?'),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _selectedMembershipType,
+              initialValue: _selectedMembershipType,
               decoration: const InputDecoration(labelText: 'Membership Type'),
               items: const [
                 DropdownMenuItem(value: 'youth_mpa', child: Text('Youth MPA')),
                 DropdownMenuItem(value: 'youth_mna', child: Text('Youth MNA')),
-                DropdownMenuItem(value: 'youth_senator', child: Text('Youth Senator')),
-                DropdownMenuItem(value: 'youth_judge', child: Text('Youth Judge')),
+                DropdownMenuItem(
+                  value: 'youth_senator',
+                  child: Text('Youth Senator'),
+                ),
+                DropdownMenuItem(
+                  value: 'youth_judge',
+                  child: Text('Youth Judge'),
+                ),
               ],
-              onChanged: (value) => setState(() => _selectedMembershipType = value),
+              onChanged: (value) =>
+                  setState(() => _selectedMembershipType = value),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () async {
               Navigator.pop(dialogContext);
@@ -200,12 +228,18 @@ class _MemberTileState extends ConsumerState<_MemberTile> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () async {
-              if (_rejectionReason == null || _rejectionReason!.trim().isEmpty) {
+              if (_rejectionReason == null ||
+                  _rejectionReason!.trim().isEmpty) {
                 ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  const SnackBar(content: Text('Please enter a rejection reason')),
+                  const SnackBar(
+                    content: Text('Please enter a rejection reason'),
+                  ),
                 );
                 return;
               }

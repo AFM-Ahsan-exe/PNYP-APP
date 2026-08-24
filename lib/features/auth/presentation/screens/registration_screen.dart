@@ -121,10 +121,16 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     }
   }
 
-  Future<void> _pickFile(String key, String title, List<String> allowedExtensions) async {
+  Future<void> _pickFile(
+    String key,
+    String title,
+    List<String> allowedExtensions,
+  ) async {
     try {
       final result = await FilePicker.platform.pickFiles(
-        type: allowedExtensions.contains('pdf') ? FileType.custom : FileType.image,
+        type: allowedExtensions.contains('pdf')
+            ? FileType.custom
+            : FileType.image,
         allowedExtensions: allowedExtensions,
         withData: true,
       );
@@ -136,9 +142,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick $title: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to pick $title: $e')));
       }
     }
   }
@@ -171,7 +177,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     }
 
     final authController = ref.read(authControllerProvider.notifier);
-    final registrationController = ref.read(registrationControllerProvider.notifier);
+    final registrationController = ref.read(
+      registrationControllerProvider.notifier,
+    );
 
     final email = _emailController.text.trim();
     final password = _passwordController.text;
@@ -245,9 +253,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       if (mounted) context.go('/account/pending');
     } else {
       final error = ref.read(registrationControllerProvider).error;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error ?? 'Registration failed')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error ?? 'Registration failed')));
     }
   }
 
@@ -257,7 +265,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       hintText: hint,
       prefixIcon: icon == null ? null : Icon(icon),
       filled: true,
-      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+      fillColor: Theme.of(
+        context,
+      ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide.none,
@@ -317,7 +327,11 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         children: [
           _field(_fullNameController, 'Full name', icon: Icons.person_outline),
           const SizedBox(height: 16),
-          _field(_fatherNameController, 'Father name', icon: Icons.family_restroom),
+          _field(
+            _fatherNameController,
+            'Father name',
+            icon: Icons.family_restroom,
+          ),
           const SizedBox(height: 16),
           _field(
             _cnicController,
@@ -340,7 +354,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _gender,
+            initialValue: _gender,
             decoration: _decoration('Gender', icon: Icons.wc_outlined),
             items: const [
               DropdownMenuItem(value: 'male', child: Text('Male')),
@@ -387,7 +401,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _province,
+            initialValue: _province,
             decoration: _decoration('Province', icon: Icons.map_outlined),
             items: _provinces
                 .map(
@@ -529,7 +543,13 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     );
   }
 
-  Widget _uploadTile(String title, String subtitle, IconData icon, String key, List<String> allowedExtensions) {
+  Widget _uploadTile(
+    String title,
+    String subtitle,
+    IconData icon,
+    String key,
+    List<String> allowedExtensions,
+  ) {
     final hasFile = _documentBytes.containsKey(key);
     return OutlinedButton.icon(
       onPressed: () => _pickFile(key, title, allowedExtensions),
@@ -546,11 +566,18 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                     title,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  Text(hasFile ? _documentNames[key] ?? 'File selected' : subtitle, style: const TextStyle(fontSize: 12)),
+                  Text(
+                    hasFile ? _documentNames[key] ?? 'File selected' : subtitle,
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ],
               ),
             ),
-            Icon(hasFile ? Icons.remove_circle_outline : Icons.upload_file_outlined),
+            Icon(
+              hasFile
+                  ? Icons.remove_circle_outline
+                  : Icons.upload_file_outlined,
+            ),
           ],
         ),
       ),
@@ -558,9 +585,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         alignment: Alignment.centerLeft,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        side: BorderSide(
-          color: hasFile ? AppColors.success : AppColors.border,
-        ),
+        side: BorderSide(color: hasFile ? AppColors.success : AppColors.border),
       ),
     );
   }
@@ -636,8 +661,8 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   Text(
                     titles[_step],
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),
@@ -688,7 +713,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   if (_step > 0) const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: (authState.isLoading || regState.isLoading) ? null : _next,
+                      onPressed: (authState.isLoading || regState.isLoading)
+                          ? null
+                          : _next,
                       icon: Icon(
                         isLast ? Icons.send_outlined : Icons.arrow_forward,
                       ),
@@ -696,8 +723,8 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                         (authState.isLoading || regState.isLoading)
                             ? 'Submitting...'
                             : isLast
-                                ? 'Submit registration'
-                                : 'Continue',
+                            ? 'Submit registration'
+                            : 'Continue',
                       ),
                     ),
                   ),
