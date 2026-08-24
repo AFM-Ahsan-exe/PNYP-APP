@@ -10,6 +10,10 @@ service cloud.firestore {
       return signedIn() && request.auth.token.admin == true;
     }
 
+    function isAtLeastRole(minimumRole) {
+      return signedIn() && request.auth.token.role in ['national_admin', 'president', 'super_admin'];
+    }
+
     match /users/{userId} {
       allow create: if signedIn()
         && request.auth.uid == userId
@@ -26,7 +30,7 @@ service cloud.firestore {
         && request.resource.data.role == resource.data.role
         && request.resource.data.status == resource.data.status
         && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['phone', 'profilePictureUrl', 'updatedAt']);
+          .hasOnly(['phone', 'profilePictureUrl', 'updatedAt', 'fcmToken', 'notificationPreferences']);
 
       allow delete: if false;
     }
@@ -35,8 +39,113 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /events/{eventId} {
+      allow read: if signedIn();
+      allow create: if isAtLeastRole('district_coordinator');
+      allow update: if isAtLeastRole('district_coordinator');
+      allow delete: if false;
+    }
+
+    match /event_registrations/{registrationId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn() && resource.data.recipientId == request.auth.uid;
+      allow create: if false;
+      allow update: if signedIn() && request.auth.uid == resource.data.recipientId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow delete: if false;
+    }
+
+    match /documents/{documentId} {
+      allow read: if signedIn() && (
+        resource.data.accessLevel == 'public' ||
+        (resource.data.accessLevel == 'members_only' && signedIn()) ||
+        isAdmin()
+      );
+      allow create: if isAtLeastRole('content_manager');
+      allow update: if isAtLeastRole('content_manager');
+      allow delete: if false;
+    }
+
+    match /opportunities/{opportunityId} {
+      allow read: if signedIn();
+      allow create: if isAtLeastRole('opportunity_manager');
+      allow update: if isAtLeastRole('opportunity_manager');
+      allow delete: if false;
+    }
+
+    match /payments/{paymentId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
     match /audit_logs/{logId} {
-      allow read, write: if false;
+      allow read: if isAdmin();
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /analytics_aggregates/{aggId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /news/{articleId} {
+      allow read: if signedIn();
+      allow create: if isAtLeastRole('content_manager');
+      allow update: if isAtLeastRole('content_manager');
+      allow delete: if false;
+    }
+
+    match /volunteers/{volunteerId} {
+      allow read: if isAdmin();
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /gallery_albums/{albumId} {
+      allow read: if signedIn();
+      allow create: if isAtLeastRole('content_manager');
+      allow update: if isAtLeastRole('content_manager');
+      allow delete: if false;
+    }
+
+    match /gallery_media/{mediaId} {
+      allow read: if signedIn();
+      allow create: if isAtLeastRole('content_manager');
+      allow update: if isAtLeastRole('content_manager');
+      allow delete: if false;
+    }
+
+    match /system_settings/{settingId} {
+      allow read: if signedIn();
+      allow write: if request.auth.token.role == 'super_admin';
+    }
+
+    match /user_activity/{activityId} {
+      allow read: if isAdmin();
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /notification_preferences/{prefId} {
+      allow read: if signedIn() && request.auth.uid == prefId;
+      allow write: if signedIn() && request.auth.uid == prefId;
+    }
+
+    match /reference_data/{refId} {
+      allow read: if true;
+      allow write: if request.auth.token.role == 'super_admin';
     }
 
     match /{document=**} {

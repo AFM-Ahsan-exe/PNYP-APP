@@ -17,7 +17,7 @@ class AdminMemberRepositoryImpl implements AdminMemberRepository {
   }
 
   @override
-  Future<void> updateStatus(String uid, String status) {
-    return remoteDataSource.updateStatus(uid, status);
+  Future<void> updateStatus(String uid, String status, {String? reason}) {
+    return remoteDataSource.updateStatus(uid, status, reason: reason);
   }
 }

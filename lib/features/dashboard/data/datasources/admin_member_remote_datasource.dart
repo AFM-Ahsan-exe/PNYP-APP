@@ -40,12 +40,14 @@ class AdminMemberRemoteDataSource {
         .toList();
   }
 
-  Future<void> updateStatus(String uid, String status) async {
+  Future<void> updateStatus(String uid, String status, {String? reason}) async {
+    final body = <String, dynamic>{'status': status};
+    if (reason != null) body['reason'] = reason;
     final response = await _client
         .patch(
           Uri.parse('$baseUrl/admin/members/$uid/status'),
           headers: await _headers(),
-          body: jsonEncode({'status': status}),
+          body: jsonEncode(body),
         )
         .timeout(const Duration(seconds: 10));
     if (response.statusCode != 200) throw StateError(response.body);

@@ -20,6 +20,8 @@ class AccountStatusScreen extends ConsumerWidget {
         return 'Account suspended';
       case AccountStatus.approved:
         return 'Account approved';
+      case AccountStatus.expired:
+        return 'Membership expired';
     }
   }
 
@@ -33,6 +35,8 @@ class AccountStatusScreen extends ConsumerWidget {
         return 'Your account is temporarily suspended. Please contact the program administrator.';
       case AccountStatus.approved:
         return 'Your account is ready.';
+      case AccountStatus.expired:
+        return 'Your membership has expired. Please renew to continue accessing member features.';
     }
   }
 

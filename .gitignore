@@ -34,6 +34,7 @@ migrate_working_dir/
 /coverage/
 /node_modules/
 **/node_modules/
+/functions/lib/
 
 # Firebase Admin credentials
 /server/service-account.json
@@ -52,7 +53,3 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
-node_modules
-node_modules
-node_modules
-node_modules

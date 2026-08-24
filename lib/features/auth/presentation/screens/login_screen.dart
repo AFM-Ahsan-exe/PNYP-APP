@@ -63,6 +63,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         }
         return;
       }
+      if (!user.emailVerified) {
+        _setError('Please verify your email address before continuing.');
+        return;
+      }
       if (user.status != AccountStatus.approved) {
         context.go('/account/${user.status.name}');
       } else {
@@ -407,9 +411,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          if (!_isAdminLogin) ...[
+                           ),
+                           const SizedBox(height: 12),
+                           TextButton.icon(
+                             onPressed: () => context.push('/password-reset'),
+                             icon: const Icon(Icons.lock_reset_outlined),
+                             label: const Text('Forgot password?'),
+                           ),
+                           const SizedBox(height: 12),
+                           if (!_isAdminLogin) ...[
                             const SizedBox(height: 8),
                             SizedBox(
                               width: double.infinity,

@@ -40,17 +40,7 @@ class AuthRemoteDataSource {
       throw StateError('createUserWithEmailAndPassword returned a null user');
     }
     await firebaseUser.updateDisplayName(name.trim());
-    final user = await _mapFirebaseUserWithProfile(firebaseUser);
-    await _firestore.collection('users').doc(firebaseUser.uid).set({
-      'uid': firebaseUser.uid,
-      'name': name.trim(),
-      'email': (firebaseUser.email ?? email).toLowerCase(),
-      'organizationId': organizationId,
-      'role': 'member',
-      'status': 'pending',
-      'createdAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-    return user.copyWith(status: AccountStatus.pending);
+    return _mapFirebaseUserWithProfile(firebaseUser);
   }
 
   Future<void> signOut() async {
@@ -80,6 +70,33 @@ class AuthRemoteDataSource {
       status: isAdmin
           ? AccountStatus.approved
           : _parseStatus(data?['status'] as String?),
+      fullName: data?['fullName'] as String?,
+      fatherName: data?['fatherName'] as String?,
+      dateOfBirth: data?['dateOfBirth'] as Timestamp?,
+      gender: data?['gender'] as String?,
+      province: data?['province'] as String?,
+      district: data?['district'] as String?,
+      city: data?['city'] as String?,
+      phone: data?['phone'] as String?,
+      education: data?['education'] as String?,
+      employment: data?['employment'] as String?,
+      skills: (data?['skills'] as List<dynamic>?)?.cast<String>() ?? const [],
+      emergencyContactName: data?['emergencyContactName'] as String?,
+      emergencyContactPhone: data?['emergencyContactPhone'] as String?,
+      referralSource: data?['referralSource'] as String?,
+      membershipType: data?['membershipType'] as String?,
+      membershipId: data?['membershipId'] as String?,
+      membershipStartDate: data?['membershipStartDate'] as Timestamp?,
+      membershipExpiryDate: data?['membershipExpiryDate'] as Timestamp?,
+      profilePictureUrl: data?['profilePictureUrl'] as String?,
+      cnicFrontUrl: data?['cnicFrontUrl'] as String?,
+      cnicBackUrl: data?['cnicBackUrl'] as String?,
+      cvUrl: data?['cvUrl'] as String?,
+      paymentProofUrl: data?['paymentProofUrl'] as String?,
+      fcmToken: data?['fcmToken'] as String?,
+      notificationPreferences: (data?['notificationPreferences'] as Map?)?.cast<String, bool>(),
+      assignedProvince: data?['assignedProvince'] as String?,
+      assignedDistrict: data?['assignedDistrict'] as String?,
     );
   }
 
@@ -94,6 +111,33 @@ class AuthRemoteDataSource {
     firebase_auth.User user, {
     UserRole role = UserRole.member,
     AccountStatus status = AccountStatus.pending,
+    String? fullName,
+    String? fatherName,
+    Timestamp? dateOfBirth,
+    String? gender,
+    String? province,
+    String? district,
+    String? city,
+    String? phone,
+    String? education,
+    String? employment,
+    List<String> skills = const [],
+    String? emergencyContactName,
+    String? emergencyContactPhone,
+    String? referralSource,
+    String? membershipType,
+    String? membershipId,
+    Timestamp? membershipStartDate,
+    Timestamp? membershipExpiryDate,
+    String? profilePictureUrl,
+    String? cnicFrontUrl,
+    String? cnicBackUrl,
+    String? cvUrl,
+    String? paymentProofUrl,
+    String? fcmToken,
+    Map<String, bool>? notificationPreferences,
+    String? assignedProvince,
+    String? assignedDistrict,
   }) {
     return AppUser(
       uid: user.uid,
@@ -101,6 +145,33 @@ class AuthRemoteDataSource {
       displayName: user.displayName,
       role: role,
       status: status,
+      fullName: fullName,
+      fatherName: fatherName,
+      dateOfBirth: dateOfBirth,
+      gender: gender,
+      province: province,
+      district: district,
+      city: city,
+      phone: phone,
+      education: education,
+      employment: employment,
+      skills: skills,
+      emergencyContactName: emergencyContactName,
+      emergencyContactPhone: emergencyContactPhone,
+      referralSource: referralSource,
+      membershipType: membershipType,
+      membershipId: membershipId,
+      membershipStartDate: membershipStartDate,
+      membershipExpiryDate: membershipExpiryDate,
+      profilePictureUrl: profilePictureUrl,
+      cnicFrontUrl: cnicFrontUrl,
+      cnicBackUrl: cnicBackUrl,
+      cvUrl: cvUrl,
+      paymentProofUrl: paymentProofUrl,
+      fcmToken: fcmToken,
+      notificationPreferences: notificationPreferences,
+      assignedProvince: assignedProvince,
+      assignedDistrict: assignedDistrict,
     );
   }
 }

@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/app_user.dart';
@@ -44,6 +47,7 @@ class AuthController extends Notifier<AuthState> {
     final currentUser = _getCurrentUser();
     if (currentUser != null) {
       unawaited(_loadCurrentUserRole(currentUser.uid));
+      unawaited(_registerFcmToken());
     }
     return AuthState(user: currentUser);
   }
@@ -52,6 +56,21 @@ class AuthController extends Notifier<AuthState> {
     final user = await _getCurrentUser.withRole();
     if (user != null && state.user?.uid == uid) {
       state = state.copyWith(user: user);
+    }
+  }
+
+  Future<void> _registerFcmToken() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null) return;
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'fcmToken': token,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      // Non-blocking: FCM registration failure should not prevent login
     }
   }
 

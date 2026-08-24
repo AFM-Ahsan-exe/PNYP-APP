@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:file_picker/file_picker.dart';
 
+import '../../../../app/theme/app_colors.dart';
+import '../controllers/registration_controller.dart';
 import '../providers/auth_providers.dart';
 
 class RegistrationScreen extends ConsumerStatefulWidget {
@@ -34,6 +37,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   String? _province;
   String? _district;
   bool _acceptedTerms = false;
+
+  final Map<String, List<int>> _documentBytes = {};
+  final Map<String, String> _documentNames = {};
 
   static const _provinces = [
     'Punjab',
@@ -115,6 +121,28 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     }
   }
 
+  Future<void> _pickFile(String key, String title, List<String> allowedExtensions) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: allowedExtensions.contains('pdf') ? FileType.custom : FileType.image,
+        allowedExtensions: allowedExtensions,
+        withData: true,
+      );
+      if (result != null && result.files.single.bytes != null) {
+        setState(() {
+          _documentBytes[key] = result.files.single.bytes!;
+          _documentNames[key] = result.files.single.name;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick $title: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _next() async {
     if (!_formKeys[_step].currentState!.validate()) return;
     if (_step < 3) {
@@ -141,39 +169,86 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       );
       return;
     }
+
     final authController = ref.read(authControllerProvider.notifier);
-    final success = await authController.signUp(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-      name: _fullNameController.text.trim(),
+    final registrationController = ref.read(registrationControllerProvider.notifier);
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final fullName = _fullNameController.text.trim();
+
+    final authSuccess = await authController.signUp(
+      email: email,
+      password: password,
+      name: fullName,
     );
+
     if (!mounted) return;
-    if (!success) {
+
+    if (!authSuccess) {
+      final error = ref.read(authControllerProvider).error;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(authControllerProvider).error ?? 'Registration failed',
-          ),
-        ),
+        SnackBar(content: Text(error ?? 'Account creation failed')),
       );
       return;
     }
-    await showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Registration submitted'),
-        content: const Text(
-          'Your account is pending administrator approval. You can sign in again after approval.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => context.pop(),
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
+
+    final selectedSkills = _skillsController.text
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+
+    final formData = {
+      'fullName': fullName,
+      'fatherName': _fatherNameController.text.trim(),
+      'cnic': _cnicController.text.trim(),
+      'dateOfBirth': _dateOfBirthController.text.trim(),
+      'gender': _gender ?? '',
+      'province': _province ?? '',
+      'district': _district ?? '',
+      'city': _cityController.text.trim(),
+      'phone': _phoneController.text.trim(),
+      'email': email,
+      'education': _educationController.text.trim(),
+      'employment': _employmentController.text.trim(),
+      'skills': selectedSkills,
+      'emergencyContactName': _emergencyNameController.text.trim(),
+      'emergencyContactPhone': _emergencyPhoneController.text.trim(),
+      'referralSource': _referralController.text.trim(),
+      'organizationId': 'unassigned',
+    };
+
+    final success = await registrationController.completeRegistration(
+      formData: formData,
+      documentBytes: _documentBytes,
     );
-    if (mounted) context.go('/account/pending');
+
+    if (!mounted) return;
+
+    if (success) {
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Registration submitted'),
+          content: const Text(
+            'Your account is pending administrator approval. Please verify your email to continue.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => context.pop(),
+              child: const Text('Continue'),
+            ),
+          ],
+        ),
+      );
+      if (mounted) context.go('/account/pending');
+    } else {
+      final error = ref.read(registrationControllerProvider).error;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error ?? 'Registration failed')),
+      );
+    }
   }
 
   InputDecoration _decoration(String label, {IconData? icon, String? hint}) {
@@ -182,9 +257,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       hintText: hint,
       prefixIcon: icon == null ? null : Icon(icon),
       filled: true,
-      fillColor: Theme.of(
-        context,
-      ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
         borderSide: BorderSide.none,
@@ -244,11 +317,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         children: [
           _field(_fullNameController, 'Full name', icon: Icons.person_outline),
           const SizedBox(height: 16),
-          _field(
-            _fatherNameController,
-            'Father name',
-            icon: Icons.family_restroom,
-          ),
+          _field(_fatherNameController, 'Father name', icon: Icons.family_restroom),
           const SizedBox(height: 16),
           _field(
             _cnicController,
@@ -271,7 +340,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            initialValue: _gender,
+            value: _gender,
             decoration: _decoration('Gender', icon: Icons.wc_outlined),
             items: const [
               DropdownMenuItem(value: 'male', child: Text('Male')),
@@ -318,7 +387,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            initialValue: _province,
+            value: _province,
             decoration: _decoration('Province', icon: Icons.map_outlined),
             items: _provinces
                 .map(
@@ -367,7 +436,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
           const SizedBox(height: 16),
           _field(
             _skillsController,
-            'Skills',
+            'Skills (comma separated)',
             icon: Icons.auto_awesome_outlined,
           ),
           const SizedBox(height: 16),
@@ -407,7 +476,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Add these files before secure submission. Each file is validated again by the backend.',
+            'Upload these files before secure submission. Each file is validated server-side.',
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -417,18 +486,32 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
             'CNIC front image',
             'PNG or JPG, max 5 MB',
             Icons.badge_outlined,
+            'cnicFront',
+            ['png', 'jpg', 'jpeg'],
           ),
           const SizedBox(height: 12),
           _uploadTile(
             'CNIC back image',
             'PNG or JPG, max 5 MB',
             Icons.badge_outlined,
+            'cnicBack',
+            ['png', 'jpg', 'jpeg'],
           ),
           const SizedBox(height: 12),
           _uploadTile(
             'CV document',
             'PDF, max 10 MB',
             Icons.description_outlined,
+            'cv',
+            ['pdf'],
+          ),
+          const SizedBox(height: 12),
+          _uploadTile(
+            'Membership fee payment proof',
+            'JPG, PNG or PDF, max 10 MB',
+            Icons.payments_outlined,
+            'paymentProof',
+            ['png', 'jpg', 'jpeg', 'pdf'],
           ),
           const SizedBox(height: 20),
           CheckboxListTile(
@@ -446,14 +529,11 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
     );
   }
 
-  Widget _uploadTile(String title, String subtitle, IconData icon) {
+  Widget _uploadTile(String title, String subtitle, IconData icon, String key, List<String> allowedExtensions) {
+    final hasFile = _documentBytes.containsKey(key);
     return OutlinedButton.icon(
-      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$title upload will be connected to Firebase Storage.'),
-        ),
-      ),
-      icon: Icon(icon),
+      onPressed: () => _pickFile(key, title, allowedExtensions),
+      icon: Icon(hasFile ? Icons.check_circle_outline : icon),
       label: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
@@ -466,11 +546,11 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                     title,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  Text(subtitle, style: const TextStyle(fontSize: 12)),
+                  Text(hasFile ? _documentNames[key] ?? 'File selected' : subtitle, style: const TextStyle(fontSize: 12)),
                 ],
               ),
             ),
-            const Icon(Icons.upload_file_outlined),
+            Icon(hasFile ? Icons.remove_circle_outline : Icons.upload_file_outlined),
           ],
         ),
       ),
@@ -478,6 +558,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         alignment: Alignment.centerLeft,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(horizontal: 12),
+        side: BorderSide(
+          color: hasFile ? AppColors.success : AppColors.border,
+        ),
       ),
     );
   }
@@ -516,6 +599,9 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       'Documents',
     ];
     final isLast = _step == 3;
+    final authState = ref.watch(authControllerProvider);
+    final regState = ref.watch(registrationControllerProvider);
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -550,8 +636,8 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   Text(
                     titles[_step],
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                 ],
               ),
@@ -602,11 +688,17 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   if (_step > 0) const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: _next,
+                      onPressed: (authState.isLoading || regState.isLoading) ? null : _next,
                       icon: Icon(
                         isLast ? Icons.send_outlined : Icons.arrow_forward,
                       ),
-                      label: Text(isLast ? 'Submit registration' : 'Continue'),
+                      label: Text(
+                        (authState.isLoading || regState.isLoading)
+                            ? 'Submitting...'
+                            : isLast
+                                ? 'Submit registration'
+                                : 'Continue',
+                      ),
                     ),
                   ),
                 ],

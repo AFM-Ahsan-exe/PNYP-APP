@@ -73,7 +73,7 @@ app.get('/admin/members', requireAdmin, async (req, res) => {
 });
 
 app.patch('/admin/members/:uid/status', requireAdmin, async (req, res) => {
-  const { status } = req.body;
+  const { status, reason } = req.body;
   const allowedStatuses = ['approved', 'rejected', 'suspended'];
   if (!allowedStatuses.includes(status)) {
     return res.status(400).json({ error: 'Invalid account status' });
@@ -89,13 +89,14 @@ app.patch('/admin/members/:uid/status', requireAdmin, async (req, res) => {
       ...(status === 'approved'
         ? { approvedAt: FieldValue.serverTimestamp(), approvedBy: req.adminUid }
         : {}),
+      ...(reason ? { statusReason: reason } : {}),
       updatedAt: FieldValue.serverTimestamp(),
     });
     await writeAuditLog({
       action: `member_${status}`,
       actorUid: req.adminUid,
       targetUid: req.params.uid,
-      details: { status },
+      details: { status, ...(reason ? { reason } : {}) },
     });
     return res.json({ uid: req.params.uid, status });
   } catch (error) {
