@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "404013949289",
+    "project_id": "pynp-mobile-management-system",
+    "storage_bucket": "pynp-mobile-management-system.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:404013949289:android:4f465ab307b2abf994ddf8",
+        "android_client_info": {
+          "package_name": "com.example.pynp_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDa6Bi8ASdTDg1Bg8Wv3S_8kbaXdbVi8Ck"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
