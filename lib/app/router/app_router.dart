@@ -96,7 +96,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isOnEmailVerification = state.matchedLocation == '/email-verification';
       final isOnOnboarding = state.matchedLocation == '/onboarding';
       final isOnAccountStatus = state.matchedLocation.startsWith('/account/');
-      final isOnRenewMembership = state.matchedLocation == '/renew-membership';
+      
+
       final isOnAdmin = state.matchedLocation == '/admin';
 
       final user = authState.user;

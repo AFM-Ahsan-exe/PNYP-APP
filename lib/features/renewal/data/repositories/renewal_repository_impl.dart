@@ -8,13 +8,9 @@ import '../../domain/repositories/renewal_repository.dart';
 import '../../../../core/network/cloud_functions_client.dart';
 
 class RenewalRepositoryImpl implements RenewalRepository {
-  final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
-  RenewalRepositoryImpl(
-    this._firestore,
-    this._auth,
-  );
+  RenewalRepositoryImpl(this._auth);
 
   Future<Map<String, dynamic>?> _callFunction(
     String functionName,

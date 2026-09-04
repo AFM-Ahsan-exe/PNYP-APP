@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,19 +9,12 @@ import '../../domain/usecases/reject_renewal.dart';
 import '../../domain/usecases/submit_renewal.dart';
 import '../../data/repositories/renewal_repository_impl.dart';
 
-final firestoreProvider = Provider<FirebaseFirestore>((ref) {
-  return FirebaseFirestore.instance;
-});
-
 final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
   return FirebaseAuth.instance;
 });
 
 final renewalRepositoryProvider = Provider<RenewalRepository>((ref) {
-  return RenewalRepositoryImpl(
-    ref.watch(firestoreProvider),
-    ref.watch(firebaseAuthProvider),
-  );
+  return RenewalRepositoryImpl(ref.watch(firebaseAuthProvider));
 });
 
 final submitRenewalProvider = Provider<SubmitRenewal>((ref) {

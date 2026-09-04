@@ -196,7 +196,7 @@ class _DashboardSearchField extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.search_rounded, size: 18, color: AppColors.textMuted),
+            Icon(Icons.search_rounded, size: 18, color: AppColors.textSecondary),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(

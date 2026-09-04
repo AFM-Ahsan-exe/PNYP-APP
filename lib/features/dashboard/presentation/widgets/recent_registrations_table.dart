@@ -88,7 +88,7 @@ class _StatusChip extends StatelessWidget {
       AccountStatus.pending => (AppColors.warning, 'Pending'),
       AccountStatus.rejected => (AppColors.error, 'Rejected'),
       AccountStatus.suspended => (AppColors.error, 'Suspended'),
-      AccountStatus.expired => (AppColors.textMuted, 'Expired'),
+      AccountStatus.expired => (AppColors.textSecondary, 'Expired'),
     };
 
     return Container(
