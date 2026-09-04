@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/dashboard_repository_impl.dart';
 import '../../domain/entities/activity_item.dart';
 import '../../domain/entities/dashboard_stats.dart';
+import '../../domain/entities/growth_point.dart';
 import '../../domain/repositories/dashboard_repository.dart';
 import '../../domain/usecases/get_dashboard_stats.dart';
 import '../../domain/usecases/get_recent_activity.dart';
@@ -43,6 +44,49 @@ final dashboardStatsProvider = FutureProvider.autoDispose<DashboardStats>((
   } catch (e) {
     throw _mapUnexpectedError(e);
   }
+});
+
+// Recent registrations - any status, newest first (already sorted by
+// createdAt desc in getPendingMembers).
+final recentRegistrationsProvider =
+    FutureProvider.autoDispose<List<AdminMember>>((ref) async {
+  try {
+    final members = await ref
+        .watch(adminMemberRepositoryProvider)
+        .getMembers(status: '');
+    return members.take(5).toList();
+  } on FirebaseException catch (e) {
+    throw _mapFirebaseError(e.message ?? 'Failed to load registrations');
+  } catch (e) {
+    throw _mapUnexpectedError(e);
+  }
+});
+
+// Last 30 daily snapshots from computeAnalyticsAggregates - real history,
+// only as deep as the function has actually been running.
+final growthHistoryProvider = FutureProvider.autoDispose<List<GrowthPoint>>((
+  ref,
+) async {
+  final snapshot = await ref
+      .watch(firestoreProvider)
+      .collection('analytics_aggregates')
+      .orderBy('date', descending: false)
+      .limitToLast(30)
+      .get();
+
+  return snapshot.docs.map((doc) {
+    final data = doc.data();
+    final date = (data['date'] as Timestamp).toDate();
+    return GrowthPoint(
+      date: date,
+      totalUsers: data['totalUsers'] as int? ?? 0,
+      totalMembers: data['totalMembers'] as int? ?? 0,
+      totalVolunteers: data['totalVolunteers'] as int? ?? 0,
+      totalCoordinators: data['totalCoordinators'] as int? ?? 0,
+      pendingApplications: data['pendingApplications'] as int? ?? 0,
+      activeOpportunities: data['activeOpportunities'] as int? ?? 0,
+    );
+  }).toList();
 });
 
 // Recent activity feed.

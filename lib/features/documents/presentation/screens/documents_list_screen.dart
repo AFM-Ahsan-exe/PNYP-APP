@@ -24,13 +24,14 @@ class DocumentsListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final documents = ref.watch(documentsStreamProvider);
     final authState = ref.watch(authControllerProvider);
-    final isAdmin = authState.user?.isAdmin ?? false;
+    final canManage =
+        authState.user?.hasAtLeastRole('content_manager') ?? false;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Documents'),
         actions: [
-          if (isAdmin)
+          if (canManage)
             IconButton(
               icon: const Icon(Icons.admin_panel_settings_rounded),
               onPressed: () => context.push('/admin/documents'),
@@ -204,4 +205,3 @@ class _DocumentTile extends StatelessWidget {
     }
   }
 }
-

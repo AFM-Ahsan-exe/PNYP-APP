@@ -6,6 +6,7 @@ class AdminMember {
   final String email;
   final AccountStatus status;
   final String role;
+  final DateTime? createdAt;
 
   const AdminMember({
     required this.uid,
@@ -13,6 +14,7 @@ class AdminMember {
     required this.email,
     required this.status,
     required this.role,
+    this.createdAt,
   });
 
   factory AdminMember.fromJson(Map<String, dynamic> json) {

@@ -81,25 +81,51 @@ class AdminProfileMenu extends ConsumerWidget {
           ),
         ),
       ],
-      child: CircleAvatar(
-        radius: 18,
-        backgroundColor: AppColors.navyDarkest,
-        backgroundImage:
-            (user?.profilePictureUrl != null &&
-                user!.profilePictureUrl!.isNotEmpty)
-            ? NetworkImage(user.profilePictureUrl!)
-            : null,
-        child:
-            (user?.profilePictureUrl == null ||
-                user!.profilePictureUrl!.isEmpty)
-            ? Text(
-                _initials(user),
-                style: AppTextStyles.body.copyWith(
-                  color: AppColors.textOnDark,
-                  fontWeight: FontWeight.w700,
-                ),
-              )
-            : null,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (MediaQuery.of(context).size.width >= 700)
+            Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    user?.displayName ?? 'Admin',
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Text(
+                    user?.role.displayName ?? 'Administrator',
+                    style: AppTextStyles.caption,
+                  ),
+                ],
+              ),
+            ),
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: AppColors.navyDarkest,
+            backgroundImage:
+                (user?.profilePictureUrl != null &&
+                    user!.profilePictureUrl!.isNotEmpty)
+                ? NetworkImage(user.profilePictureUrl!)
+                : null,
+            child:
+                (user?.profilePictureUrl == null ||
+                    user!.profilePictureUrl!.isEmpty)
+                ? Text(
+                    _initials(user),
+                    style: AppTextStyles.body.copyWith(
+                      color: AppColors.textOnDark,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  )
+                : null,
+          ),
+        ],
       ),
     );
   }

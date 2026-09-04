@@ -21,7 +21,11 @@ import '../widgets/dashboard_sidebar.dart';
 import '../widgets/dashboard_state_views.dart';
 import '../widgets/stats_grid.dart';
 import '../widgets/recent_activity_list.dart';
+import '../widgets/recent_registrations_table.dart';
+import '../widgets/quick_stats_panel.dart';
+import '../widgets/growth_chart.dart';
 import '../../../../core/widgets/app_loading_state.dart';
+import '../../../notifications/presentation/providers/notification_providers.dart';
 
 const double _mobileBreakpoint = 700;
 const double _desktopBreakpoint = 1100;
@@ -155,17 +159,58 @@ class _DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
                 onPressed: () => Scaffold.of(context).openDrawer(),
               ),
             ),
-          Expanded(
-            child: Text(
-              title,
-              style: AppTextStyles.headline,
-              overflow: TextOverflow.ellipsis,
+          if (!showMenuButton)
+            Expanded(child: _DashboardSearchField())
+          else
+            Expanded(
+              child: Text(
+                title,
+                style: AppTextStyles.headline,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
+          const SizedBox(width: 16),
           const _NotificationsBell(),
           const SizedBox(width: 12),
           const AdminProfileMenu(),
         ],
+      ),
+    );
+  }
+}
+
+class _DashboardSearchField extends StatelessWidget {
+  const _DashboardSearchField();
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 420),
+      child: Container(
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceMuted,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.search_rounded, size: 18, color: AppColors.textMuted),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                decoration: InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  hintText: 'Search anything...',
+                  hintStyle: AppTextStyles.bodyMuted.copyWith(fontSize: 13),
+                ),
+                style: AppTextStyles.body.copyWith(fontSize: 13),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -176,12 +221,19 @@ class _NotificationsBell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return IconButton(
-      tooltip: 'Notifications',
-      icon: const Icon(Icons.notifications_none_rounded),
-      onPressed: () {
-        context.push('/admin/notifications');
-      },
+    final unreadAsync = ref.watch(unreadNotificationCountStreamProvider);
+    final count = unreadAsync.asData?.value ?? 0;
+
+    return Badge(
+      label: Text('$count'),
+      isLabelVisible: count > 0,
+      child: IconButton(
+        tooltip: 'Notifications',
+        icon: const Icon(Icons.notifications_none_rounded),
+        onPressed: () {
+          context.push('/admin/notifications');
+        },
+      ),
     );
   }
 }
@@ -287,11 +339,15 @@ class _DashboardOverview extends ConsumerWidget {
 
     final statsAsync = ref.watch(dashboardStatsProvider);
     final activityAsync = ref.watch(recentActivityProvider);
+    final registrationsAsync = ref.watch(recentRegistrationsProvider);
+    final growthAsync = ref.watch(growthHistoryProvider);
 
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(dashboardStatsProvider);
         ref.invalidate(recentActivityProvider);
+        ref.invalidate(recentRegistrationsProvider);
+        ref.invalidate(growthHistoryProvider);
         await ref.read(dashboardStatsProvider.future);
       },
       child: ListView(
@@ -305,11 +361,25 @@ class _DashboardOverview extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           statsAsync.when(
-            data: (stats) => StatsGrid(stats: stats),
+            data: (stats) => StatsGrid(
+              stats: stats,
+              oldest: growthAsync.asData?.value.isNotEmpty == true
+                  ? growthAsync.asData!.value.first
+                  : null,
+            ),
             loading: () => const _CompactLoading(height: 120),
             error: (error, _) => DashboardErrorView(
               message: error.toString(),
               onRetry: () => ref.invalidate(dashboardStatsProvider),
+            ),
+          ),
+          const SizedBox(height: 16),
+          growthAsync.when(
+            data: (points) => GrowthChart(points: points),
+            loading: () => const _CompactLoading(height: 260),
+            error: (error, _) => DashboardErrorView(
+              message: error.toString(),
+              onRetry: () => ref.invalidate(growthHistoryProvider),
             ),
           ),
           const SizedBox(height: 16),
@@ -356,29 +426,62 @@ class _DashboardOverview extends ConsumerWidget {
             },
           ),
           const SizedBox(height: 16),
-          _QuickActionsRow(
-            actions: [
-              _QuickActionItem(
-                label: 'Review Applications',
-                icon: Icons.fact_check_rounded,
-                onTap: () => context.push('/admin/applications'),
-              ),
-              _QuickActionItem(
-                label: 'Manage Opportunities',
-                icon: Icons.event_available_rounded,
-                onTap: () => context.push('/admin/opportunities'),
-              ),
-              _QuickActionItem(
-                label: 'Volunteers',
-                icon: Icons.volunteer_activism_rounded,
-                onTap: () => context.push('/admin/volunteers'),
-              ),
-              _QuickActionItem(
-                label: 'Renewals',
-                icon: Icons.refresh_rounded,
-                onTap: () => context.push('/admin/renewals'),
-              ),
-            ],
+          registrationsAsync.when(
+            data: (members) => RecentRegistrationsTable(members: members),
+            loading: () => const _CompactLoading(height: 200),
+            error: (error, _) => DashboardErrorView(
+              message: error.toString(),
+              onRetry: () => ref.invalidate(recentRegistrationsProvider),
+            ),
+          ),
+          const SizedBox(height: 16),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final wide = constraints.maxWidth >= 900;
+              final actions = _QuickActionsRow(
+                actions: [
+                  _QuickActionItem(
+                    label: 'Review Applications',
+                    icon: Icons.fact_check_rounded,
+                    onTap: () => context.push('/admin/applications'),
+                  ),
+                  _QuickActionItem(
+                    label: 'Manage Opportunities',
+                    icon: Icons.event_available_rounded,
+                    onTap: () => context.push('/admin/opportunities'),
+                  ),
+                  _QuickActionItem(
+                    label: 'Volunteers',
+                    icon: Icons.volunteer_activism_rounded,
+                    onTap: () => context.push('/admin/volunteers'),
+                  ),
+                  _QuickActionItem(
+                    label: 'Renewals',
+                    icon: Icons.refresh_rounded,
+                    onTap: () => context.push('/admin/renewals'),
+                  ),
+                ],
+              );
+
+              if (!wide) {
+                return Column(
+                  children: [
+                    actions,
+                    const SizedBox(height: 12),
+                    const QuickStatsPanel(),
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 2, child: actions),
+                  const SizedBox(width: 16),
+                  const Expanded(child: QuickStatsPanel()),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -499,4 +602,3 @@ class _QuickActionChip extends StatelessWidget {
     );
   }
 }
-

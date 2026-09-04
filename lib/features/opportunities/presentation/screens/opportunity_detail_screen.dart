@@ -128,7 +128,7 @@ class OpportunityDetailScreen extends ConsumerWidget {
                 maxLines: 3,
                 decoration: const InputDecoration(
                   labelText: 'Motivation',
-                  hintText: 'Why do you want to volunteer?',
+                  hintText: 'Why do you want to volunteer? (min. 10 characters)',
                 ),
               ),
               const SizedBox(height: 16),
@@ -136,7 +136,7 @@ class OpportunityDetailScreen extends ConsumerWidget {
                 controller: availabilityController,
                 decoration: const InputDecoration(
                   labelText: 'Availability',
-                  hintText: 'e.g., Weekends, Evenings',
+                  hintText: 'e.g., Weekends, Evenings (min. 3 characters)',
                 ),
               ),
               const SizedBox(height: 16),
@@ -158,6 +158,28 @@ class OpportunityDetailScreen extends ConsumerWidget {
               onPressed: isSubmitting
                   ? null
                   : () async {
+                      final motivation = motivationController.text.trim();
+                      final availability = availabilityController.text.trim();
+                      if (motivation.length < 10) {
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Motivation must be at least 10 characters',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+                      if (availability.length < 3) {
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Availability must be at least 3 characters',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
                       setDialogState(() => isSubmitting = true);
                       try {
                         final client = CloudFunctionsClient(
@@ -171,8 +193,8 @@ class OpportunityDetailScreen extends ConsumerWidget {
                         final idToken = await user.getIdToken();
                         await client.call('applyAsVolunteer', {
                           'opportunityId': opportunityId,
-                          'motivation': motivationController.text.trim(),
-                          'availability': availabilityController.text.trim(),
+                          'motivation': motivation,
+                          'availability': availability,
                           'skills': skillsController.text
                               .split(',')
                               .map((s) => s.trim())

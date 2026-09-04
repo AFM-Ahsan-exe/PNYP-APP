@@ -14,6 +14,17 @@ export const computeAnalyticsAggregates = functions.pubsub.schedule('0 0 * * *')
     // it's still needlessly downloading every document just to count
     // them. Switched to count() aggregation queries for the same reason
     // as getDashboardStats.
+    const coordinatorRoles = [
+      'admin',
+      'district_coordinator',
+      'regional_coordinator',
+      'content_manager',
+      'opportunity_manager',
+      'national_admin',
+      'president',
+      'super_admin',
+    ];
+
     const [
       usersCount,
       eventsCount,
@@ -23,6 +34,12 @@ export const computeAnalyticsAggregates = functions.pubsub.schedule('0 0 * * *')
       newsCount,
       activeMembersCount,
       pendingMembersCount,
+      // Same shape as getDashboardStats, so stat-card trends compare
+      // like-for-like against this daily snapshot.
+      totalMembersCount,
+      pendingApplicationsCount,
+      totalCoordinatorsCount,
+      activeOpportunitiesCount,
     ] = await Promise.all([
       db.collection('users').count().get(),
       db.collection('events').count().get(),
@@ -32,6 +49,10 @@ export const computeAnalyticsAggregates = functions.pubsub.schedule('0 0 * * *')
       db.collection('news').count().get(),
       db.collection('users').where('status', '==', 'approved').count().get(),
       db.collection('users').where('status', '==', 'pending').count().get(),
+      db.collection('users').where('role', '==', 'member').count().get(),
+      db.collection('users').where('role', '==', 'member').where('status', '==', 'pending').count().get(),
+      db.collection('users').where('role', 'in', coordinatorRoles).count().get(),
+      db.collection('opportunities').where('status', '==', 'active').count().get(),
     ]);
 
     const aggregateData = {
@@ -44,6 +65,10 @@ export const computeAnalyticsAggregates = functions.pubsub.schedule('0 0 * * *')
       totalNews: newsCount.data().count,
       activeMembers: activeMembersCount.data().count,
       pendingMembers: pendingMembersCount.data().count,
+      totalMembers: totalMembersCount.data().count,
+      pendingApplications: pendingApplicationsCount.data().count,
+      totalCoordinators: totalCoordinatorsCount.data().count,
+      activeOpportunities: activeOpportunitiesCount.data().count,
     };
 
     await db.collection('analytics_aggregates').doc(startOfDay.toISOString().split('T')[0]).set(aggregateData);

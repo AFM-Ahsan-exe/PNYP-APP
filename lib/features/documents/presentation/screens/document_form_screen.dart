@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -262,16 +262,23 @@ class _DocumentFormScreenState extends ConsumerState<DocumentFormScreen> {
 
   Future<void> _pickFile() async {
     try {
-      final picker = ImagePicker();
-      final picked = await picker.pickMedia();
-      if (picked != null) {
-        setState(() => _documentFile = File(picked.path));
+      final file = await FilePicker.pickFile(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
+      );
+
+      final path = file?.path;
+
+      if (path != null) {
+        setState(() => _documentFile = File(path));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to pick file: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick file: $e'),
+          ),
+        );
       }
     }
   }

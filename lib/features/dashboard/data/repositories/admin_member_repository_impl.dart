@@ -78,8 +78,19 @@ class AdminMemberRepositoryImpl implements AdminMemberRepository {
           orElse: () => AccountStatus.pending,
         ),
         role: roleString,
+        createdAt: _parseTimestamp(data['createdAt']),
       );
     }).toList();
+  }
+
+  static DateTime? _parseTimestamp(dynamic value) {
+    if (value is Map) {
+      final seconds = value['seconds'] as int?;
+      if (seconds != null) {
+        return DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
+      }
+    }
+    return null;
   }
 
   @override
