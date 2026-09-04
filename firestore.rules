@@ -1,0 +1,230 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function roleValue(role) {
+      return role == 'member' ? 0 :
+        role == 'district_coordinator' ? 1 :
+        role == 'regional_coordinator' ? 2 :
+        role == 'content_manager' ? 3 :
+        role == 'opportunity_manager' ? 4 :
+        role == 'admin' ? 5 :
+        role == 'national_admin' ? 6 :
+        role == 'president' ? 7 :
+        role == 'super_admin' ? 8 : -1;
+    }
+
+    function isAtLeastRole(minimumRole) {
+      return signedIn() &&
+        roleValue(request.auth.token.role) >=
+        roleValue(minimumRole);
+    }
+
+    function isAdmin() {
+      return isAtLeastRole('admin');
+    }
+
+    match /users/{userId} {
+
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.uid == userId
+        && request.resource.data.role == 'member'
+        && request.resource.data.status == 'pending'
+        && request.resource.data.email == request.auth.token.email;
+
+      allow read: if signedIn() && (
+        request.auth.uid == userId ||
+        isAdmin()
+      );
+
+      allow update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            'phone',
+            'profilePictureUrl',
+            'notificationPreferences',
+            'onboardingCompleted',
+            'education',
+            'employment',
+            'skills',
+            'emergencyContactName',
+            'emergencyContactPhone',
+            'updatedAt',
+            'fcmToken',
+            'emailVerified'
+          ]);
+
+      allow delete: if false;
+    }
+
+    match /cnic_lookup/{lookupId} {
+      allow read, write: if false;
+    }
+
+    match /events/{eventId} {
+      allow read: if signedIn();
+      allow create: if isAtLeastRole('district_coordinator');
+      allow update: if isAtLeastRole('district_coordinator');
+      allow delete: if false;
+    }
+
+    match /event_registrations/{registrationId} {
+      allow read: if signedIn() &&
+        (
+          resource.data.userId == request.auth.uid ||
+          isAdmin()
+        );
+
+      allow create: if signedIn() &&
+        request.resource.data.userId == request.auth.uid;
+
+      allow update: if signedIn() &&
+        request.resource.data.userId == request.auth.uid;
+
+      allow delete: if false;
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn() &&
+        resource.data.recipientId == request.auth.uid;
+
+      allow create: if isAdmin();
+
+      allow update: if signedIn()
+        && request.auth.uid == resource.data.recipientId
+        && request.resource.data.diff(resource.data)
+          .affectedKeys()
+          .hasOnly(['isRead', 'updatedAt']);
+
+      allow delete: if false;
+    }
+
+    match /documents/{documentId} {
+      allow read: if signedIn() && (
+        resource.data.accessLevel == 'public' ||
+        (resource.data.accessLevel == 'members_only' && signedIn()) ||
+        isAdmin()
+      );
+
+      allow create: if isAtLeastRole('content_manager');
+      allow update: if isAtLeastRole('content_manager');
+      allow delete: if false;
+    }
+
+    match /opportunities/{opportunityId} {
+      allow read: if signedIn();
+      allow create: if isAtLeastRole('opportunity_manager');
+      allow update: if isAtLeastRole('opportunity_manager');
+      allow delete: if false;
+    }
+
+    match /payments/{paymentId} {
+      allow read: if signedIn() &&
+        resource.data.userId == request.auth.uid;
+
+      allow create: if signedIn() &&
+        request.resource.data.userId == request.auth.uid;
+
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /audit_logs/{logId} {
+      allow read: if isAtLeastRole('national_admin');
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /reports/{reportId} {
+      allow read: if isAtLeastRole('regional_coordinator');
+      allow create: if isAtLeastRole('regional_coordinator');
+      allow update: if isAtLeastRole('regional_coordinator');
+      allow delete: if false;
+    }
+
+    match /analytics_aggregates/{aggId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /news/{articleId} {
+      allow read: if signedIn() &&
+        (
+          resource.data.isPublished == true ||
+          isAtLeastRole('content_manager')
+        );
+
+      allow create: if isAtLeastRole('content_manager');
+      allow update: if isAtLeastRole('content_manager');
+      allow delete: if false;
+    }
+
+    match /volunteers/{volunteerId} {
+      allow read: if isAdmin() ||
+        isAtLeastRole('opportunity_manager') ||
+        resource.data.userId == request.auth.uid;
+
+      allow create: if signedIn() &&
+        request.resource.data.userId == request.auth.uid;
+
+      allow update: if isAtLeastRole('opportunity_manager');
+      allow delete: if false;
+    }
+
+    match /gallery_albums/{albumId} {
+      allow read: if signedIn();
+      allow create: if isAtLeastRole('content_manager');
+      allow update: if isAtLeastRole('content_manager');
+      allow delete: if false;
+    }
+
+    match /gallery_media/{mediaId} {
+      allow read: if signedIn();
+      allow create: if isAtLeastRole('content_manager');
+      allow update: if isAtLeastRole('content_manager');
+      allow delete: if false;
+    }
+
+    match /system_settings/{settingId} {
+      allow read: if isAtLeastRole('national_admin');
+      allow write: if request.auth.token.role == 'super_admin';
+    }
+
+    match /user_activity/{activityId} {
+      allow read: if isAtLeastRole('national_admin');
+
+      allow create: if signedIn() &&
+        request.resource.data.userId == request.auth.uid;
+
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /activity_logs/{logId} {
+      allow read: if isAtLeastRole('national_admin');
+      allow create: if isAdmin();
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /reference_data/{refId} {
+      allow read: if true;
+      allow write: if request.auth.token.role == 'super_admin';
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,14 @@
+# Copy this file to `android/key.properties` (same folder) and fill in
+# your real release keystore details. That file is git-ignored on
+# purpose - never commit real signing credentials.
+#
+# If you don't have a release keystore yet, create one with:
+#   keytool -genkey -v -keystore ~/pynp-release.jks -keyalg RSA \
+#     -keysize 2048 -validity 10000 -alias pynp
+#
+# Then point storeFile at wherever you saved it.
+
+storeFile=/absolute/path/to/pynp-release.jks
+storePassword=REPLACE_ME
+keyAlias=pynp
+keyPassword=REPLACE_ME

@@ -1,0 +1,31 @@
+{
+	"flutter": {
+		"platforms": {
+			"android": {
+				"default": {
+					"projectId": "pynp-mobile-management-system",
+					"appId": "1:404013949289:android:4f465ab307b2abf994ddf8",
+					"fileOutput": "android/app/google-services.json"
+				}
+			},
+			"dart": {
+				"lib/firebase_options.dart": {
+					"projectId": "pynp-mobile-management-system",
+					"configurations": {
+						"android": "1:404013949289:android:4f465ab307b2abf994ddf8"
+					}
+				}
+			}
+		}
+	},
+	"firestore": {
+		"rules": "firestore.rules",
+		"indexes": "firestore.indexes.json"
+	},
+		"storage": {
+		"rules": "storage.rules"
+	},
+	"functions": {
+		"source": "functions"
+	}
+}

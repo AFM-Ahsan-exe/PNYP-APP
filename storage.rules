@@ -1,0 +1,117 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function roleValue(role) {
+      return role == 'member' ? 0 :
+        role == 'district_coordinator' ? 1 :
+        role == 'regional_coordinator' ? 2 :
+        role == 'content_manager' ? 3 :
+        role == 'opportunity_manager' ? 4 :
+        role == 'admin' ? 5 :
+        role == 'national_admin' ? 6 :
+        role == 'president' ? 7 :
+        role == 'super_admin' ? 8 : -1;
+    }
+
+    function isAtLeastRole(minimumRole) {
+      return signedIn() &&
+        roleValue(request.auth.token.role) >=
+        roleValue(minimumRole);
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches(
+        'image/(jpeg|png|jpg|webp)'
+      );
+    }
+
+    function isPdf() {
+      return request.resource.contentType == 'application/pdf';
+    }
+
+    match /cnic_images/{userId}/{file} {
+
+      allow read: if signedIn() &&
+        (
+          request.auth.uid == userId ||
+          isAtLeastRole('national_admin')
+        );
+
+      allow write: if signedIn() &&
+        request.auth.uid == userId &&
+        isImage() &&
+        request.resource.size <= 5 * 1024 * 1024;
+    }
+
+    match /profile_pictures/{userId}/{file} {
+
+      allow read: if signedIn();
+
+      allow write: if signedIn() &&
+        request.auth.uid == userId &&
+        isImage() &&
+        request.resource.size <= 5 * 1024 * 1024;
+    }
+
+    match /renewals/{userId}/{file} {
+
+      allow read: if signedIn() &&
+        (
+          request.auth.uid == userId ||
+          isAtLeastRole('district_coordinator')
+        );
+
+      allow write: if signedIn() &&
+        request.auth.uid == userId &&
+        (
+          isImage() || isPdf()
+        ) &&
+        request.resource.size <= 10 * 1024 * 1024;
+    }
+
+    match /documents/{userId}/{file} {
+
+      allow read: if signedIn() &&
+        (
+          request.auth.uid == userId ||
+          isAtLeastRole('content_manager')
+        );
+
+      allow write: if signedIn() &&
+        (
+          request.auth.uid == userId ||
+          isAtLeastRole('content_manager')
+        ) &&
+        request.resource.size <= 25 * 1024 * 1024;
+    }
+
+    match /admin_documents/{documentId}/{file} {
+
+      allow read: if signedIn() &&
+        isAtLeastRole('content_manager');
+
+      allow write: if signedIn() &&
+        isAtLeastRole('content_manager') &&
+        request.resource.size <= 25 * 1024 * 1024;
+    }
+
+    match /gallery/{albumId}/{file} {
+
+      allow read: if signedIn();
+
+      allow write: if signedIn() &&
+        isAtLeastRole('content_manager') &&
+        request.resource.size <= 100 * 1024 * 1024;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
